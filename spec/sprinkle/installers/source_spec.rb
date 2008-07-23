@@ -103,7 +103,7 @@ describe Sprinkle::Installers::Source do
   describe 'during gnu source archive style installation' do
 
     it 'should prepare the build, installation and source archives area' do
-      @installer.should_receive(:prepare).and_return(
+      @installer.send(:prepare).should eql(
         [
          'mkdir -p /usr/local',
          'mkdir -p /usr/local/builds',
@@ -114,7 +114,7 @@ describe Sprinkle::Installers::Source do
     end
 
     it 'should download the source archive' do
-      @installer.should_receive(:download).and_return(
+      @installer.send(:download).should eql(
         [
          "wget -cq --directory-prefix='/usr/local/archives' #{@source}"
         ]
@@ -122,9 +122,9 @@ describe Sprinkle::Installers::Source do
     end
 
     it 'should extract the source archive' do
-      @installer.should_receive(:extract).and_return(
+      @installer.send(:extract).should eql(
         [
-         "bash -c 'cd /usr/local/builds && tar xzf /usr/local/archives/ruby-1.8.6-p111.tar.gz"
+         "bash -c 'cd /usr/local/builds && tar xzf /usr/local/archives/ruby-1.8.6-p111.tar.gz'"
         ]
       )
     end
@@ -136,27 +136,26 @@ describe Sprinkle::Installers::Source do
       with    = %w( debug extras ).inject([]) { |m, value| m << "--with-#{value}"; m }
       without = %w( fancyisms ).inject([]) { |m, value| m << "--without-#{value}"; m }
 
-      options = "#{enable.join(' ')} #{disable.join(' ')} #{with.join(' ')} #{without.join(' ')}"
+      options = [enable.join(' '), disable.join(' '), with.join(' '), without.join(' ')]
 
-      @installer.should_receive(:build).and_return(
-        [
-         "bash -c 'cd /usr/local/builds && ./configure --prefix=/usr/local #{options} > #{@package.name}-configure.log 2>&1'"
-        ]
-      )
+      command = @installer.send(:configure)
+      command.first.should include("bash -c 'cd /usr/local/builds/ruby-1.8.6-p111 && ./configure --prefix=/usr/local")      
+      command.first.should include("> #{@package.name}-configure.log 2>&1'")
+      options.all? {|option| command.first.include?(option)}.should be_true
     end
 
     it 'should build the source' do
-      @installer.should_receive(:build).and_return(
+      @installer.send(:build).should eql(
         [
-         "bash -c 'cd /usr/local/builds && make > #{@package.name}-build.log 2>&1'"
+         "bash -c 'cd /usr/local/builds/ruby-1.8.6-p111 && make > #{@package.name}-build.log 2>&1'"
         ]
       )
     end
 
     it 'should install the source' do
-      @installer.should_receive(:install).and_return(
+      @installer.send(:install).should eql(
         [
-         "bash -c 'cd /usr/local/builds && make install > #{@package.name}-install.log 2>&1'"
+         "bash -c 'cd /usr/local/builds/ruby-1.8.6-p111 && make install > #{@package.name}-install.log 2>&1'"
         ]
       )
     end
