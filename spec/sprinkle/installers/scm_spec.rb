@@ -8,7 +8,7 @@ describe Sprinkle::Installers::SCM do
 
     @deployment = deployment do
       delivery :capistrano      
-      source do
+      scm 'http://github.com/crafterm/sprinkle/trunk' do
         prefix   '/usr'
         builds   '/usr/builds'
       end
